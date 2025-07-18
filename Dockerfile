@@ -10,9 +10,10 @@ COPY tsconfig.json ./
 # Install all dependencies (including dev dependencies)
 RUN npm ci
 
-# Copy source code and environment files
+# Copy source code
 COPY src/ ./src/
-COPY .env.* ./
+# Copy environment files - comment out for prod
+# COPY .env.* .
 
 # Development stage
 FROM base AS development
@@ -43,9 +44,9 @@ COPY package*.json ./
 # Install only production dependencies
 RUN npm ci --only=production && npm cache clean --force
 
-# Copy built application and environment files
+# Copy built application
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/.env.* ./
+# COPY --from=builder /app/.env.* . # comment out for prod
 
 # Create logs directory
 RUN mkdir -p logs
