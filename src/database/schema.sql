@@ -1,5 +1,4 @@
-CREATE DATABASE IF NOT EXISTS crypto_checkout;
-USE crypto_checkout;
+-- PostgreSQL schema for crypto checkout application
 
 -- Transactions table to store all payment transactions
 CREATE TABLE transactions (
@@ -8,42 +7,52 @@ CREATE TABLE transactions (
     email VARCHAR(255) NOT NULL,
     amount DECIMAL(10, 2) NOT NULL,
     currency VARCHAR(10) NOT NULL DEFAULT 'USD',
-    status ENUM('pending', 'completed', 'failed', 'expired') NOT NULL DEFAULT 'pending',
+    status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'completed', 'failed', 'expired')),
 
     -- Coinbase Commerce integration fields
     coinbase_charge_id VARCHAR(255),
     coinbase_charge_code VARCHAR(255),
     payment_url TEXT,
-    expires_at DATETIME,
-    confirmed_at DATETIME,
+    expires_at TIMESTAMP,
+    confirmed_at TIMESTAMP,
 
     -- Timestamps
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     -- Indexes for performance
-    INDEX idx_email (email),
-    INDEX idx_status (status),
-    INDEX idx_coinbase_charge_id (coinbase_charge_id),
-    INDEX idx_created_at (created_at),
-    INDEX idx_status_created (status, created_at)
+    CONSTRAINT idx_email CHECK (email IS NOT NULL),
+    CONSTRAINT idx_status CHECK (status IS NOT NULL),
+    CONSTRAINT idx_coinbase_charge_id CHECK (coinbase_charge_id IS NOT NULL),
+    CONSTRAINT idx_created_at CHECK (created_at IS NOT NULL)
 );
+
+-- Create indexes
+CREATE INDEX idx_transactions_email ON transactions(email);
+CREATE INDEX idx_transactions_status ON transactions(status);
+CREATE INDEX idx_transactions_coinbase_charge_id ON transactions(coinbase_charge_id);
+CREATE INDEX idx_transactions_created_at ON transactions(created_at);
+CREATE INDEX idx_transactions_status_created ON transactions(status, created_at);
 
 -- Webhook events table to track all incoming webhooks for audit/debugging
 CREATE TABLE webhook_events (
     id VARCHAR(36) PRIMARY KEY,
-    webhook_id VARCHAR(255) NOT NULL,
+    webhook_id VARCHAR(255) NOT NULL UNIQUE,
     webhook_type VARCHAR(50) NOT NULL,
     coinbase_charge_id VARCHAR(255),
-    processed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    payload JSON,
+    processed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    payload JSONB,
 
-    -- Prevent duplicate webhook processing
-    UNIQUE KEY unique_webhook (webhook_id),
-    INDEX idx_webhook_type (webhook_type),
-    INDEX idx_charge_id (coinbase_charge_id),
-    INDEX idx_processed_at (processed_at)
+    -- Indexes
+    CONSTRAINT idx_webhook_type CHECK (webhook_type IS NOT NULL),
+    CONSTRAINT idx_charge_id CHECK (coinbase_charge_id IS NOT NULL),
+    CONSTRAINT idx_processed_at CHECK (processed_at IS NOT NULL)
 );
+
+-- Create indexes for webhook_events
+CREATE INDEX idx_webhook_events_type ON webhook_events(webhook_type);
+CREATE INDEX idx_webhook_events_charge_id ON webhook_events(coinbase_charge_id);
+CREATE INDEX idx_webhook_events_processed_at ON webhook_events(processed_at);
 
 -- Sample data for testing
 INSERT INTO transactions (
@@ -60,7 +69,7 @@ INSERT INTO transactions (
     'test-charge-1',
     'CHG-TEST123',
     'https://superai.coinbase.com/pay/CHG-TEST123',
-    DATE_ADD(NOW(), INTERVAL 15 MINUTE),
-    NOW(),
-    NOW()
+    CURRENT_TIMESTAMP + INTERVAL '15 minutes',
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
 );

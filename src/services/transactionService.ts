@@ -1,11 +1,11 @@
-import { Connection } from "mysql2/promise";
+import { Pool } from "pg";
 import { v4 as uuidv4 } from "uuid";
 import { createConnection } from "../config/database";
 import { CheckoutRequest, Transaction } from "../types";
 import { logger } from "../utils/logger";
 
 export class TransactionService {
-  private db!: Connection;
+  private db!: Pool;
   private isInitialized: boolean = false;
 
   constructor() {
@@ -79,11 +79,11 @@ export class TransactionService {
         id, checkout_id, email, amount, currency, status,
         coinbase_charge_id, coinbase_charge_code, payment_url,
         expires_at, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
     `;
 
     await this.ensureConnection();
-    await this.db.execute(query, [
+    await this.db.query(query, [
       transaction.id,
       transaction.checkout_id,
       transaction.email,
@@ -115,12 +115,12 @@ export class TransactionService {
   ): Promise<void> {
     const query = `
       UPDATE transactions
-      SET status = ?, confirmed_at = ?, updated_at = ?
-      WHERE coinbase_charge_id = ?
+      SET status = $1, confirmed_at = $2, updated_at = $3
+      WHERE coinbase_charge_id = $4
     `;
 
     await this.ensureConnection();
-    await this.db.execute(query, [
+    await this.db.query(query, [
       status,
       confirmedAt || null,
       new Date(),
@@ -133,12 +133,12 @@ export class TransactionService {
   async findTransactionByChargeId(
     coinbaseChargeId: string
   ): Promise<Transaction | null> {
-    const query = "SELECT * FROM transactions WHERE coinbase_charge_id = ?";
+    const query = "SELECT * FROM transactions WHERE coinbase_charge_id = $1";
     await this.ensureConnection();
-    const [rows] = await this.db.execute(query, [coinbaseChargeId]);
+    const result = await this.db.query(query, [coinbaseChargeId]);
 
-    if (Array.isArray(rows) && rows.length > 0) {
-      return rows[0] as Transaction;
+    if (result.rows && result.rows.length > 0) {
+      return result.rows[0] as Transaction;
     }
 
     return null;
@@ -164,7 +164,7 @@ export class TransactionService {
     `;
 
     await this.ensureConnection();
-    const [rows] = await this.db.execute(query);
-    return (rows as any[])[0];
+    const result = await this.db.query(query);
+    return result.rows[0];
   }
 }
