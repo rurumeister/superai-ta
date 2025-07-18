@@ -14,18 +14,14 @@ import { logger } from "./utils/logger";
 
 const app = express();
 
-// Middleware
 app.use(helmet());
 app.use(cors());
 
-// Request parsing
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Logging
 app.use(requestLogger);
 
-// Swagger Documentation
 app.use(
   "/api-docs",
   swaggerUi.serve,
@@ -36,13 +32,11 @@ app.use(
   })
 );
 
-// Swagger JSON endpoint
 app.get("/api-docs/swagger.json", (req: Request, res: Response) => {
   res.setHeader("Content-Type", "application/json");
   res.json(swaggerSpec);
 });
 
-// Routes
 app.use("/api", healthRoutes);
 app.use("/api", checkoutRoutes);
 app.use("/api", webhookRoutes);
@@ -62,10 +56,8 @@ app.get("/", (req: Request, res: Response) => {
   });
 });
 
-//Error Handler
 app.use(errorHandler);
 
-// 404 handler
 app.use("*", (req: Request, res: Response) => {
   res.status(404).json({
     success: false,
@@ -73,7 +65,6 @@ app.use("*", (req: Request, res: Response) => {
   });
 });
 
-// Start the server
 const PORT = config.port;
 app.listen(PORT, () => {
   logger.info(`Server running on port ${PORT}`);
