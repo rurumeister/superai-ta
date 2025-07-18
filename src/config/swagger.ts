@@ -17,7 +17,10 @@ const options: swaggerJSDoc.Options = {
     servers: [
       {
         url: config.app.baseUrl,
-        description: "Development server",
+        description:
+          config.nodeEnv === "production"
+            ? "Production server"
+            : "Development server",
       },
     ],
     components: {

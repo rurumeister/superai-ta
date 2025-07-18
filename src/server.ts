@@ -105,10 +105,11 @@ app.use("*", (req: Request, res: Response) => {
 // Start the server
 const PORT = config.port;
 app.listen(PORT, () => {
-  logger.info(`🚀 Server running on port ${PORT}`);
-  logger.info(`📱 Environment: ${config.nodeEnv}`);
-  logger.info(`🔗 Health check: http://localhost:${PORT}/api/health`);
-  logger.info(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
+  logger.info(`Server running on port ${PORT}`);
+  logger.info(`Environment: ${config.nodeEnv}`);
+  logger.info(`Base URL: ${config.app.baseUrl}`);
+  logger.info(`Health check: ${config.app.baseUrl}/api/health`);
+  logger.info(`API Documentation: ${config.app.baseUrl}/api-docs`);
 });
 
 export default app;
