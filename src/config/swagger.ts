@@ -54,7 +54,7 @@ const options: swaggerJSDoc.Options = {
                 payment_url: {
                   type: "string",
                   format: "uri",
-                  example: "https://fake.coinbase.com/pay/CHG-ABC123",
+                  example: "https://superai.coinbase.com/pay/CHG-ABC123",
                   description: "Hosted payment URL for customer",
                 },
                 checkout_id: {

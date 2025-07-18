@@ -51,7 +51,7 @@ const transactionService = new TransactionService();
  *                 value:
  *                   success: true
  *                   data:
- *                     payment_url: "https://fake.coinbase.com/pay/CHG-ABC123"
+ *                     payment_url: "https://superai.coinbase.com/pay/CHG-ABC123"
  *                     checkout_id: "550e8400-e29b-41d4-a716-446655440000"
  *                     expires_at: "2024-01-01T12:30:00.000Z"
  *       400:

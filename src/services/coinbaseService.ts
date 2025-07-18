@@ -22,7 +22,7 @@ export class CoinbaseService {
         .toString(36)
         .substring(2, 10)
         .toUpperCase()}`;
-      const hostedUrl = `https://fake.coinbase.com/pay/${chargeCode}`;
+      const hostedUrl = `https://superai.coinbase.com/pay/${chargeCode}`;
       const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 minutes
 
       logger.info("Mock Coinbase charge created", {
