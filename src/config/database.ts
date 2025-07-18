@@ -7,6 +7,14 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 export const createConnection = async (maxRetries = 5, initialDelay = 1000) => {
   let lastError: any;
 
+  logger.info("Database connection details:", {
+    host: config.database.host,
+    user: config.database.user,
+    database: config.database.name,
+    port: config.database.port,
+    hasPassword: !!config.database.password,
+  });
+
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       logger.info(

@@ -102,13 +102,43 @@ router.get("/health", async (req: Request, res: Response) => {
   }
 });
 
-// Simple ping endpoint that doesn't require database
 router.get("/ping", (req: Request, res: Response) => {
   res.json({
     message: "pong",
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || "development",
   });
+});
+
+router.get("/db-status", async (req: Request, res: Response) => {
+  try {
+    const { config } = await import("../config/config");
+
+    res.json({
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || "development",
+      database: {
+        host: config.database.host,
+        user: config.database.user,
+        database: config.database.name,
+        port: config.database.port,
+        hasPassword: !!config.database.password,
+      },
+      env_vars: {
+        DB_HOST: process.env.DB_HOST,
+        DB_USER: process.env.DB_USER,
+        DB_NAME: process.env.DB_NAME,
+        DB_PORT: process.env.DB_PORT,
+        NODE_ENV: process.env.NODE_ENV,
+        BASE_URL: process.env.BASE_URL,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: "Failed to get database status",
+      details: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
 });
 
 export default router;

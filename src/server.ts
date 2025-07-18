@@ -110,6 +110,16 @@ app.listen(PORT, () => {
   logger.info(`Base URL: ${config.app.baseUrl}`);
   logger.info(`Health check: ${config.app.baseUrl}/api/health`);
   logger.info(`API Documentation: ${config.app.baseUrl}/api-docs`);
+
+  logger.info("Environment Variables Debug:", {
+    NODE_ENV: process.env.NODE_ENV,
+    DB_HOST: process.env.DB_HOST,
+    DB_PORT: process.env.DB_PORT,
+    DB_NAME: process.env.DB_NAME,
+    DB_USER: process.env.DB_USER,
+    BASE_URL: process.env.BASE_URL,
+    APP_URL: process.env.APP_URL,
+  });
 });
 
 export default app;
