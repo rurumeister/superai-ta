@@ -682,6 +682,255 @@ export const swaggerSpec = {
         },
       },
     },
+    "/api/db-test": {
+      get: {
+        summary: "Test database connection",
+        description:
+          "Test the database connection and return connection details",
+        tags: ["Debug"],
+        responses: {
+          "200": {
+            description: "Database connection successful",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    success: {
+                      type: "boolean",
+                      example: true,
+                    },
+                    message: {
+                      type: "string",
+                      example: "Database connection successful",
+                    },
+                    timestamp: {
+                      type: "string",
+                      format: "date-time",
+                      example: "2024-01-01T12:00:00.000Z",
+                    },
+                    database: {
+                      type: "object",
+                      properties: {
+                        current_time: {
+                          type: "string",
+                          format: "date-time",
+                          example: "2024-01-01T12:00:00.000Z",
+                        },
+                        version: {
+                          type: "string",
+                          example: "PostgreSQL 14.18 on x86_64-pc-linux-gnu",
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          "500": {
+            description: "Database connection failed",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    success: {
+                      type: "boolean",
+                      example: false,
+                    },
+                    error: {
+                      type: "string",
+                      example: "Database connection failed",
+                    },
+                    details: {
+                      type: "string",
+                      example: "password authentication failed for user 'root'",
+                    },
+                    timestamp: {
+                      type: "string",
+                      format: "date-time",
+                      example: "2024-01-01T12:00:00.000Z",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/api/db-status": {
+      get: {
+        summary: "Get database configuration status",
+        description:
+          "Return current database configuration and environment variables",
+        tags: ["Debug"],
+        responses: {
+          "200": {
+            description: "Database configuration retrieved",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    timestamp: {
+                      type: "string",
+                      format: "date-time",
+                      example: "2024-01-01T12:00:00.000Z",
+                    },
+                    environment: {
+                      type: "string",
+                      example: "production",
+                    },
+                    database: {
+                      type: "object",
+                      properties: {
+                        host: {
+                          type: "string",
+                          example:
+                            "app-4742542c-6553-41df-8e96-48f33276c646-do-user-13926411-0.e.db.ondigitalocean.com",
+                        },
+                        user: {
+                          type: "string",
+                          example: "db",
+                        },
+                        database: {
+                          type: "string",
+                          example: "db",
+                        },
+                        port: {
+                          type: "number",
+                          example: 25060,
+                        },
+                        hasPassword: {
+                          type: "boolean",
+                          example: true,
+                        },
+                      },
+                    },
+                    env_vars: {
+                      type: "object",
+                      properties: {
+                        DB_HOST: {
+                          type: "string",
+                          example:
+                            "app-4742542c-6553-41df-8e96-48f33276c646-do-user-13926411-0.e.db.ondigitalocean.com",
+                        },
+                        DB_USER: {
+                          type: "string",
+                          example: "db",
+                        },
+                        DB_NAME: {
+                          type: "string",
+                          example: "db",
+                        },
+                        DB_PORT: {
+                          type: "string",
+                          example: "25060",
+                        },
+                        NODE_ENV: {
+                          type: "string",
+                          example: "production",
+                        },
+                        BASE_URL: {
+                          type: "string",
+                          example:
+                            "https://superai-ta-p45qk.ondigitalocean.app",
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          "500": {
+            description: "Failed to get database status",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    error: {
+                      type: "string",
+                      example: "Failed to get database status",
+                    },
+                    details: {
+                      type: "string",
+                      example: "Unknown error",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/api/db-migrate": {
+      post: {
+        summary: "Run database migrations",
+        description: "Execute database migrations to create tables and indexes",
+        tags: ["Debug"],
+        responses: {
+          "200": {
+            description: "Database migration completed successfully",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    success: {
+                      type: "boolean",
+                      example: true,
+                    },
+                    message: {
+                      type: "string",
+                      example: "Database migration completed successfully",
+                    },
+                    timestamp: {
+                      type: "string",
+                      format: "date-time",
+                      example: "2024-01-01T12:00:00.000Z",
+                    },
+                  },
+                },
+              },
+            },
+          },
+          "500": {
+            description: "Database migration failed",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    success: {
+                      type: "boolean",
+                      example: false,
+                    },
+                    error: {
+                      type: "string",
+                      example: "Database migration failed",
+                    },
+                    details: {
+                      type: "string",
+                      example: "Unknown error",
+                    },
+                    timestamp: {
+                      type: "string",
+                      format: "date-time",
+                      example: "2024-01-01T12:00:00.000Z",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
   },
   components: {
     schemas: {
