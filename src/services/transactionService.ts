@@ -6,13 +6,29 @@ import { logger } from "../utils/logger";
 
 export class TransactionService {
   private db!: Connection;
+  private isInitialized: boolean = false;
 
   constructor() {
-    this.initializeDatabase();
+    this.initializeDatabase().catch((error) => {
+      logger.error("Failed to initialize database:", error);
+    });
   }
 
   private async initializeDatabase() {
-    this.db = await createConnection();
+    try {
+      this.db = await createConnection();
+      this.isInitialized = true;
+      logger.info("TransactionService database initialized");
+    } catch (error) {
+      logger.error("TransactionService database initialization failed:", error);
+      throw error;
+    }
+  }
+
+  private async ensureConnection() {
+    if (!this.isInitialized) {
+      await this.initializeDatabase();
+    }
   }
 
   /**
@@ -53,6 +69,7 @@ export class TransactionService {
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
+    await this.ensureConnection();
     await this.db.execute(query, [
       transaction.id,
       transaction.checkout_id,
@@ -89,6 +106,7 @@ export class TransactionService {
       WHERE coinbase_charge_id = ?
     `;
 
+    await this.ensureConnection();
     await this.db.execute(query, [
       status,
       confirmedAt || null,
@@ -103,6 +121,7 @@ export class TransactionService {
     coinbaseChargeId: string
   ): Promise<Transaction | null> {
     const query = "SELECT * FROM transactions WHERE coinbase_charge_id = ?";
+    await this.ensureConnection();
     const [rows] = await this.db.execute(query, [coinbaseChargeId]);
 
     if (Array.isArray(rows) && rows.length > 0) {
@@ -131,6 +150,7 @@ export class TransactionService {
       FROM transactions
     `;
 
+    await this.ensureConnection();
     const [rows] = await this.db.execute(query);
     return (rows as any[])[0];
   }
