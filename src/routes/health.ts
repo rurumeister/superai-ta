@@ -120,4 +120,28 @@ router.get("/db-test", async (req: Request, res: Response) => {
   }
 });
 
+router.post("/db-migrate", async (req: Request, res: Response) => {
+  try {
+    logger.info("Starting database migration...");
+
+    // Import and run the migration
+    const { migrate } = await import("../database/migrate");
+    await migrate();
+
+    res.json({
+      success: true,
+      message: "Database migration completed successfully",
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    logger.error("Database migration failed:", error);
+    res.status(500).json({
+      success: false,
+      error: "Database migration failed",
+      details: error instanceof Error ? error.message : "Unknown error",
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
+
 export default router;
