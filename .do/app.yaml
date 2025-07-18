@@ -37,4 +37,5 @@ databases:
     num_nodes: 1
     size: db-s-dev-database
     version: "15"
-    db_name: crypto_checkout
+    db_name: db
+    id: e832ce2d-d8e5-4aad-b8ab-f08c8fea1a17
