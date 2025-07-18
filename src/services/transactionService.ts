@@ -1,11 +1,11 @@
-import { Pool } from "pg";
 import { v4 as uuidv4 } from "uuid";
+import { config } from "../config/config";
 import { createConnection } from "../config/database";
 import { CheckoutRequest, Transaction } from "../types";
 import { logger } from "../utils/logger";
 
 export class TransactionService {
-  private db!: Pool;
+  private db: any;
   private isInitialized: boolean = false;
 
   constructor() {
@@ -44,6 +44,10 @@ export class TransactionService {
     }
   }
 
+  getDatabase() {
+    return this.db;
+  }
+
   /**
    * Creates a new transaction in the database
    * @param request - The request object containing the checkout details
@@ -74,13 +78,23 @@ export class TransactionService {
       updated_at: new Date(),
     };
 
-    const query = `
-      INSERT INTO transactions (
-        id, checkout_id, email, amount, currency, status,
-        coinbase_charge_id, coinbase_charge_code, payment_url,
-        expires_at, created_at, updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-    `;
+    // Use different parameter syntax based on database type
+    const isPostgreSQL = config.nodeEnv === "production";
+    const query = isPostgreSQL
+      ? `
+        INSERT INTO transactions (
+          id, checkout_id, email, amount, currency, status,
+          coinbase_charge_id, coinbase_charge_code, payment_url,
+          expires_at, created_at, updated_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      `
+      : `
+        INSERT INTO transactions (
+          id, checkout_id, email, amount, currency, status,
+          coinbase_charge_id, coinbase_charge_code, payment_url,
+          expires_at, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `;
 
     await this.ensureConnection();
     await this.db.query(query, [
@@ -113,11 +127,18 @@ export class TransactionService {
     status: "completed" | "failed" | "expired",
     confirmedAt?: Date
   ): Promise<void> {
-    const query = `
-      UPDATE transactions
-      SET status = $1, confirmed_at = $2, updated_at = $3
-      WHERE coinbase_charge_id = $4
-    `;
+    const isPostgreSQL = config.nodeEnv === "production";
+    const query = isPostgreSQL
+      ? `
+        UPDATE transactions
+        SET status = $1, confirmed_at = $2, updated_at = $3
+        WHERE coinbase_charge_id = $4
+      `
+      : `
+        UPDATE transactions
+        SET status = ?, confirmed_at = ?, updated_at = ?
+        WHERE coinbase_charge_id = ?
+      `;
 
     await this.ensureConnection();
     await this.db.query(query, [
@@ -133,7 +154,11 @@ export class TransactionService {
   async findTransactionByChargeId(
     coinbaseChargeId: string
   ): Promise<Transaction | null> {
-    const query = "SELECT * FROM transactions WHERE coinbase_charge_id = $1";
+    const isPostgreSQL = config.nodeEnv === "production";
+    const query = isPostgreSQL
+      ? "SELECT * FROM transactions WHERE coinbase_charge_id = $1"
+      : "SELECT * FROM transactions WHERE coinbase_charge_id = ?";
+
     await this.ensureConnection();
     const result = await this.db.query(query, [coinbaseChargeId]);
 
@@ -166,5 +191,160 @@ export class TransactionService {
     await this.ensureConnection();
     const result = await this.db.query(query);
     return result.rows[0];
+  }
+
+  /**
+   * Gets transactions with pagination and filtering
+   * @param options - Pagination and filter options
+   * @returns Array of transactions
+   */
+  async getTransactions(options: {
+    page: number;
+    limit: number;
+    offset: number;
+    status?: string;
+    email?: string;
+  }): Promise<Transaction[]> {
+    const { page, limit, offset, status, email } = options;
+
+    const isPostgreSQL = config.nodeEnv === "production";
+
+    if (isPostgreSQL) {
+      // PostgreSQL with parameterized queries
+      let query = "SELECT * FROM transactions";
+      const params: any[] = [];
+      let paramIndex = 1;
+      let hasWhere = false;
+
+      if (status) {
+        query += hasWhere ? " AND" : " WHERE";
+        query += ` status = $${paramIndex}`;
+        params.push(status);
+        paramIndex++;
+        hasWhere = true;
+      }
+
+      if (email) {
+        query += hasWhere ? " AND" : " WHERE";
+        query += ` email = $${paramIndex}`;
+        params.push(email);
+        paramIndex++;
+        hasWhere = true;
+      }
+
+      query += ` ORDER BY created_at DESC LIMIT $${paramIndex} OFFSET $${
+        paramIndex + 1
+      }`;
+      params.push(limit, offset);
+
+      await this.ensureConnection();
+      const result = await this.db.query(query, params);
+      return result.rows || [];
+    } else {
+      // MySQL with string interpolation (safer for this case)
+      let query = "SELECT * FROM transactions";
+      let hasWhere = false;
+
+      if (status) {
+        query += hasWhere ? " AND" : " WHERE";
+        query += ` status = '${status.replace(/'/g, "''")}'`;
+        hasWhere = true;
+      }
+
+      if (email) {
+        query += hasWhere ? " AND" : " WHERE";
+        query += ` email = '${email.replace(/'/g, "''")}'`;
+        hasWhere = true;
+      }
+
+      query += ` ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`;
+
+      await this.ensureConnection();
+      const result = await this.db.query(query);
+      return result.rows || [];
+    }
+  }
+
+  /**
+   * Gets the total count of transactions with optional filters
+   * @param options - Filter options
+   * @returns Total count
+   */
+  async getTransactionCount(options: {
+    status?: string;
+    email?: string;
+  }): Promise<number> {
+    const { status, email } = options;
+
+    const isPostgreSQL = config.nodeEnv === "production";
+
+    if (isPostgreSQL) {
+      // PostgreSQL with parameterized queries
+      let query = "SELECT COUNT(*) as count FROM transactions";
+      const params: any[] = [];
+      let paramIndex = 1;
+      let hasWhere = false;
+
+      if (status) {
+        query += hasWhere ? " AND" : " WHERE";
+        query += ` status = $${paramIndex}`;
+        params.push(status);
+        paramIndex++;
+        hasWhere = true;
+      }
+
+      if (email) {
+        query += hasWhere ? " AND" : " WHERE";
+        query += ` email = $${paramIndex}`;
+        params.push(email);
+        paramIndex++;
+        hasWhere = true;
+      }
+
+      await this.ensureConnection();
+      const result = await this.db.query(query, params);
+      return parseInt(result.rows[0].count) || 0;
+    } else {
+      // MySQL with string interpolation (safer for this case)
+      let query = "SELECT COUNT(*) as count FROM transactions";
+      let hasWhere = false;
+
+      if (status) {
+        query += hasWhere ? " AND" : " WHERE";
+        query += ` status = '${status.replace(/'/g, "''")}'`;
+        hasWhere = true;
+      }
+
+      if (email) {
+        query += hasWhere ? " AND" : " WHERE";
+        query += ` email = '${email.replace(/'/g, "''")}'`;
+        hasWhere = true;
+      }
+
+      await this.ensureConnection();
+      const result = await this.db.query(query);
+      return parseInt(result.rows[0].count) || 0;
+    }
+  }
+
+  /**
+   * Gets a transaction by its ID
+   * @param id - The transaction ID
+   * @returns The transaction or null if not found
+   */
+  async getTransactionById(id: string): Promise<Transaction | null> {
+    const isPostgreSQL = config.nodeEnv === "production";
+    const query = isPostgreSQL
+      ? "SELECT * FROM transactions WHERE id = $1"
+      : "SELECT * FROM transactions WHERE id = ?";
+
+    await this.ensureConnection();
+    const result = await this.db.query(query, [id]);
+
+    if (result.rows && result.rows.length > 0) {
+      return result.rows[0] as Transaction;
+    }
+
+    return null;
   }
 }

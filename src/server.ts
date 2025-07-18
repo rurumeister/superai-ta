@@ -8,6 +8,7 @@ import { errorHandler } from "./middleware/errorHandler";
 import { requestLogger } from "./middleware/requestLogger";
 import checkoutRoutes from "./routes/checkout";
 import healthRoutes from "./routes/health";
+import transactionRoutes from "./routes/transactions";
 import webhookRoutes from "./routes/webhook";
 import { logger } from "./utils/logger";
 
@@ -35,48 +36,17 @@ app.use(
   })
 );
 
+// Swagger JSON endpoint
+app.get("/api-docs/swagger.json", (req: Request, res: Response) => {
+  res.setHeader("Content-Type", "application/json");
+  res.json(swaggerSpec);
+});
+
 // Routes
 app.use("/api", healthRoutes);
 app.use("/api", checkoutRoutes);
 app.use("/api", webhookRoutes);
-
-/**
- * @swagger
- * /:
- *   get:
- *     summary: API Information
- *     description: Returns basic API information and available endpoints
- *     tags: [Info]
- *     responses:
- *       200:
- *         description: API information
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Crypto Checkout Simulator API"
- *                 version:
- *                   type: string
- *                   example: "1.0.0"
- *                 endpoints:
- *                   type: object
- *                   properties:
- *                     checkout:
- *                       type: string
- *                       example: "POST /api/checkout"
- *                     webhook:
- *                       type: string
- *                       example: "POST /api/webhook"
- *                     health:
- *                       type: string
- *                       example: "GET /api/health"
- *                     docs:
- *                       type: string
- *                       example: "GET /api-docs"
- */
+app.use("/api", transactionRoutes);
 
 app.get("/", (req: Request, res: Response) => {
   res.json({
@@ -86,6 +56,7 @@ app.get("/", (req: Request, res: Response) => {
       checkout: "POST /api/checkout",
       webhook: "POST /api/webhook",
       health: "GET /api/health",
+      transactions: "GET /api/transactions",
       docs: "GET /api-docs",
     },
   });
