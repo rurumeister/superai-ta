@@ -5,10 +5,10 @@
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc",
-    "start": "NODE_ENV=production node dist/server.js",
+    "start": "NODE_ENV=production npm run build && node dist/server.js",
     "dev": "NODE_ENV=development ts-node-dev --respawn --transpile-only src/server.ts",
     "dev:prod": "NODE_ENV=production ts-node-dev --respawn --transpile-only src/server.ts",
-    "db:migrate": "ts-node src/database/migrate.ts",
+    "db:migrate": "NODE_ENV=production npm run build && node dist/database/migrate.js",
     "test": "jest",
     "lint": "eslint src/**/*.ts"
   },
