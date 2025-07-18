@@ -34,7 +34,7 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data_dev:/var/lib/mysql
-      - ./src/database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      - ./src/database/schema.mysql.sql:/docker-entrypoint-initdb.d/schema.sql
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]

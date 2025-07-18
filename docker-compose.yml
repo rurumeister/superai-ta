@@ -6,7 +6,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=production # change to development for local development
       - DB_HOST=mysql
       - DB_USER=crypto_user
       - DB_PASSWORD=crypto_password
