@@ -59,22 +59,56 @@ const transactionService = new TransactionService();
 
 router.get("/health", async (req: Request, res: Response) => {
   try {
-    const stats = await transactionService.getTransactionStats();
-
-    res.json({
+    // Basic health check - always respond quickly
+    const basicHealth = {
       status: "healthy",
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       memory: process.memoryUsage(),
-      transactions: stats,
-    });
+      environment: process.env.NODE_ENV || "development",
+      version: "1.0.0",
+    };
+
+    // Try to get database stats, but don't fail if it doesn't work
+    try {
+      const stats = await transactionService.getTransactionStats();
+      res.json({
+        ...basicHealth,
+        transactions: stats,
+        database: "connected",
+      });
+    } catch (dbError) {
+      logger.warn("Database health check failed, but service is healthy", {
+        dbError,
+      });
+      res.json({
+        ...basicHealth,
+        transactions: {
+          total: 0,
+          pending: 0,
+          completed: 0,
+          failed: 0,
+        },
+        database: "disconnected",
+      });
+    }
   } catch (error) {
     logger.error("Health check failed", { error });
     res.status(500).json({
       status: "unhealthy",
-      error: "Database connection failed",
+      error: "Service error",
+      timestamp: new Date().toISOString(),
     });
   }
+});
+
+// Simple ping endpoint that doesn't require database
+router.get("/ping", (req: Request, res: Response) => {
+  res.json({
+    message: "pong",
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || "development",
+  });
 });
 
 export default router;

@@ -4,10 +4,7 @@ import { config } from "./config";
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export const createConnection = async (
-  maxRetries = 10,
-  initialDelay = 1000
-) => {
+export const createConnection = async (maxRetries = 5, initialDelay = 1000) => {
   let lastError: any;
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {

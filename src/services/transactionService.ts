@@ -27,7 +27,20 @@ export class TransactionService {
 
   private async ensureConnection() {
     if (!this.isInitialized) {
-      await this.initializeDatabase();
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(
+          () => reject(new Error("Database connection timeout")),
+          10000
+        );
+      });
+
+      try {
+        await Promise.race([this.initializeDatabase(), timeoutPromise]);
+      } catch (error) {
+        logger.error("Database connection failed or timed out:", error);
+        throw error;
+      }
     }
   }
 
