@@ -67,7 +67,8 @@ export const createConnection = async (
       );
 
       if (config.nodeEnv === "production") {
-        // Use PostgreSQL for production
+        logger.info("Using PostgreSQL for production environment");
+
         const { Pool } = await import("pg");
         const pool = new Pool({
           host: config.database.host,
@@ -78,16 +79,24 @@ export const createConnection = async (
           max: 20,
           idleTimeoutMillis: 30000,
           connectionTimeoutMillis: 10000,
+          ssl: {
+            rejectUnauthorized: false,
+          },
         });
 
-        // Test the connection
+        logger.info("Testing PostgreSQL connection...");
         const client = await pool.connect();
+
+        const result = await client.query("SELECT NOW() as current_time");
+        logger.info("PostgreSQL connection test successful:", result.rows[0]);
+
         client.release();
 
         logger.info("PostgreSQL database connected successfully");
         return new PostgreSQLConnection(pool);
       } else {
-        // Use MySQL for development
+        logger.info("Using MySQL for development environment");
+
         const mysql = await import("mysql2/promise");
         const connection = await mysql.createConnection({
           host: config.database.host,
@@ -103,12 +112,21 @@ export const createConnection = async (
       }
     } catch (error: any) {
       lastError = error;
-      logger.warn(
-        `Database connection attempt ${attempt} failed: ${error.message}`
-      );
+      logger.error(`Database connection attempt ${attempt} failed:`, {
+        error: error.message,
+        code: error.code,
+        errno: error.errno,
+        sqlState: error.sqlState,
+        sqlMessage: error.sqlMessage,
+        stack: error.stack,
+      });
 
       if (attempt === maxRetries) {
-        logger.error("All database connection attempts failed");
+        logger.error("All database connection attempts failed. Final error:", {
+          message: error.message,
+          code: error.code,
+          details: error,
+        });
         throw error;
       }
 

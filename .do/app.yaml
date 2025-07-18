@@ -31,6 +31,30 @@ services:
     health_check:
       http_path: /api/health
 
+  - name: migration-worker
+    source_dir: /
+    github:
+      repo: rurumeister/superai-ta
+      branch: main
+    run_command: npm run db:migrate
+    environment_slug: node-js
+    instance_count: 0
+    instance_size_slug: basic-xxs
+    dockerfile_path: Dockerfile
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: DB_HOST
+        value: ${postgres.HOSTNAME}
+      - key: DB_PORT
+        value: ${postgres.PORT}
+      - key: DB_NAME
+        value: ${postgres.DATABASE}
+      - key: DB_USER
+        value: ${postgres.USERNAME}
+      - key: DB_PASSWORD
+        value: ${postgres.PASSWORD}
+
 databases:
   - name: postgres
     engine: PG

@@ -89,4 +89,35 @@ router.get("/db-status", async (req: Request, res: Response) => {
   }
 });
 
+router.get("/db-test", async (req: Request, res: Response) => {
+  try {
+    logger.info("Testing database connection...");
+
+    const { createConnection } = await import("../config/database");
+    const db = await createConnection();
+
+    const result = await db.query(
+      "SELECT NOW() as current_time, version() as db_version"
+    );
+
+    res.json({
+      success: true,
+      message: "Database connection successful",
+      timestamp: new Date().toISOString(),
+      database: {
+        current_time: result.rows[0]?.current_time,
+        version: result.rows[0]?.db_version,
+      },
+    });
+  } catch (error) {
+    logger.error("Database test failed:", error);
+    res.status(500).json({
+      success: false,
+      error: "Database connection failed",
+      details: error instanceof Error ? error.message : "Unknown error",
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
+
 export default router;

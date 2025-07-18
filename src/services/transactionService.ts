@@ -31,15 +31,24 @@ export class TransactionService {
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(
           () => reject(new Error("Database connection timeout")),
-          10000
+          15000
         );
       });
 
       try {
+        logger.info("Attempting to initialize database connection...");
         await Promise.race([this.initializeDatabase(), timeoutPromise]);
+        logger.info("Database connection established successfully");
       } catch (error) {
-        logger.error("Database connection failed or timed out:", error);
-        throw error;
+        logger.error("Database connection failed or timed out:", {
+          error: error instanceof Error ? error.message : error,
+          stack: error instanceof Error ? error.stack : undefined,
+        });
+        throw new Error(
+          `Database connection failed: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`
+        );
       }
     }
   }
