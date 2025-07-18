@@ -1,0 +1,37 @@
+name: superai-ta
+services:
+  - name: api
+    source_dir: /
+    github:
+      repo: rurumeister/superai-ta
+      branch: main
+    run_command: npm start
+    environment_slug: node-js
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    dockerfile_path: Dockerfile
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: DB_HOST
+        value: ${mysql.HOSTNAME}
+      - key: DB_PORT
+        value: ${mysql.PORT}
+      - key: DB_NAME
+        value: ${mysql.DATABASE}
+      - key: DB_USER
+        value: ${mysql.USERNAME}
+      - key: DB_PASSWORD
+        value: ${mysql.PASSWORD}
+      - key: BASE_URL
+        value: ${APP_URL}
+    http_port: 3000
+    health_check:
+      http_path: /api/health
+
+databases:
+  - name: mysql
+    engine: MYSQL
+    num_nodes: 1
+    size: db-s-dev-database
+    version: "8"

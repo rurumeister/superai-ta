@@ -59,7 +59,7 @@ INSERT INTO transactions (
     'completed',
     'test-charge-1',
     'CHG-TEST123',
-    'https://fake.coinbase.com/pay/CHG-TEST123',
+    'https://superai.coinbase.com/pay/CHG-TEST123',
     DATE_ADD(NOW(), INTERVAL 15 MINUTE),
     NOW(),
     NOW()
